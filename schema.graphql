@@ -5,3 +5,26 @@ type Upgraded @entity(immutable: true) {
   blockTimestamp: BigInt!
   transactionHash: Bytes!
 }
+
+type Account @entity(immutable: false) {
+  id: ID!
+  balance: BigInt! 
+  deposits: [Deposit!]! @derivedFrom(field: "account")
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "account")
+}
+
+type Deposit @entity(immutable: true) {
+  id: ID!
+  account: Account!
+  amount: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type Withdrawal @entity(immutable: true) {
+  id: ID!
+  account: Account!
+  amount: BigInt!
+  timestamp: BigInt!
+  transactionHash: Bytes!
+}
