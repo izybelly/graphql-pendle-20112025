@@ -4,7 +4,8 @@ from datetime import datetime, timezone
 import csv
 
 
-SUBGRAPH_URL = "https://api.studio.thegraph.com/query/1716229/pendle-20112025/version/latest"
+SUBGRAPH_URL = "https://gateway.thegraph.com/api/subgraphs/id/97MFRfM1qyic6JYQuoS9pDD4NhaH8HTioFj32Ynpsf1j"
+API_KEY = "b214b0f962d755b24bae5d542e4c7361"
 BATCH_SIZE = 1000
 TOTAL_YIELD_POT = 877992.7680  
 
@@ -15,7 +16,8 @@ QUERY_TEMPLATE = """
     first: %d,
     skip: %d,
     orderBy: timestamp,
-    orderDirection: asc
+    orderDirection: asc,
+    block: { number: 23836544 }
   ) {
     id
     account {
@@ -46,7 +48,11 @@ QUERY_TEMPLATE = """
 
 def fetch_batch(skip):
     query = QUERY_TEMPLATE % (BATCH_SIZE, skip, BATCH_SIZE, skip)
-    response = requests.post(SUBGRAPH_URL, json={'query': query})
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json"
+    }
+    response = requests.post(SUBGRAPH_URL, json={'query': query}, headers=headers)
     response.raise_for_status()
     return response.json()['data']
 
@@ -88,10 +94,10 @@ def save_to_csv(filename, data, fields):
 def save_yields_to_csv(filename, user_yields, total_yield):
     with open(filename, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['account_id', 'yield', 'yield_percentage'])
+        writer.writerow(['account_id', 'yield', 'yield_decimal'])
         for user, y in user_yields.items():
-            percentage = (y / total_yield) * 100 if total_yield else 0
-            writer.writerow([user, f"{y:.6f}", f"{percentage:.4f}%"])
+            decimal = (y / total_yield) if total_yield else 0
+            writer.writerow([user, f"{y:.6f}", f"{decimal:.8f}"])
 
 
 def calculate_yield(deposits, withdrawals, total_yield):
